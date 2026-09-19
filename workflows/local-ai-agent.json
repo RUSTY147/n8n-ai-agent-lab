@@ -1,0 +1,344 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "7a1a6cf4-3884-4322-8d02-6d855cfe2c10",
+      "name": "When chat message received",
+      "webhookId": "b7ebcca1-c6a0-4a5f-9de8-250f19c3d751"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a helpful AI assistant that can use tools.\n\nAlways respond in English unless the user explicitly asks for another language.\nKeep answers clear, concise, and factual.\n\nTool usage rules:\n- Use the employee tools when the user asks about an employee.\n- Use the weather tools when the user asks about weather.\n- If a request requires multiple tools, use them in the necessary order.\n- Do not call a tool when you already have the required information.\n- Do not invent employee information, locations, coordinates, or weather data.\n- If a tool returns no result, clearly tell the user that the requested information was not found.\n- After using tools, answer the user's question directly without explaining your internal reasoning."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "39dfb0ab-4c76-4e53-9fdd-7d09e7745ab9",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "qwen3:4b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        96,
+        208
+      ],
+      "id": "0befc4d3-a84b-479e-b42c-5fcf137380d3",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "q1vh84NiNkhQVuQI",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        240,
+        208
+      ],
+      "id": "2a661a6b-c961-4de2-8ba5-8b31e5f101c1",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        384,
+        208
+      ],
+      "id": "4e0693d8-d21b-4256-9432-357aac5c2e7a",
+      "name": "Calculator"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Gets the current weather for a location using latitude and longitude.\n\nUse this tool only after the geocoding tool has been used to find the location's latitude and longitude.\n\nDo not guess or invent coordinates.",
+        "url": "=https://api.open-meteo.com/v1/forecast",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "latitude",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `Latitude of the city requested by the user. Use the city's decimal latitude.`, 'string') }}"
+            },
+            {
+              "name": "longitude",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters1_Value', `Longitude of the city requested by the user. Use the city's decimal longitude.`, 'string') }}"
+            },
+            {
+              "name": "current",
+              "value": "temperature_2m,wind_speed_10m"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        640,
+        304
+      ],
+      "id": "86125a7e-254a-426a-991b-b429cbf03671",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Find the geographic coordinates of a city or location.\nUse this tool when you need to convert a place name into latitude and longitude before calling another location-based API.",
+        "url": "https://geocoding-api.open-meteo.com/v1/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `The city or location name provided by the user, for example Mumbai, Hyderabad, or London.`, 'string') }}"
+            },
+            {
+              "name": "count",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        480,
+        304
+      ],
+      "id": "f5bdc7ad-aad4-43f3-8244-3337805ecfa2",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Search Wikipedia for information about a topic, person, place, technology, or other general subject.\n\nUse this tool when the user asks for factual information that can be found on Wikipedia.",
+        "url": "https://en.wikipedia.org/w/api.php",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "query"
+            },
+            {
+              "name": "list",
+              "value": "search"
+            },
+            {
+              "name": "srsearch",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters2_Value', `The topic or subject the user wants to search for on Wikipedia.`, 'string') }}"
+            },
+            {
+              "name": "format",
+              "value": "json"
+            },
+            {
+              "name": "srlimit",
+              "value": "3"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        576,
+        432
+      ],
+      "id": "61c5a88e-670d-4fbd-a9a5-e61059ab4685",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Search the employees table by employee name.\n\nUse this tool when the user asks about a specific employee.\nPass the employee's name exactly as mentioned by the user.\n\nIf the search returns no rows, tell the user that the employee was not found.\nDo not invent or guess employee information.",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "LHvtOSXS2B2Dk4mr",
+          "mode": "list",
+          "cachedResultName": "employees",
+          "cachedResultUrl": "/projects/hC98jRbPlQ6EjMby/datatables/LHvtOSXS2B2Dk4mr"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "Name",
+              "keyValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('conditions0_Value', `The employee name mentioned by the user. Use the name exactly as provided by the user, for example Ajay, Rahul, or Priya.`, 'string') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTableTool",
+      "typeVersion": 1.1,
+      "position": [
+        320,
+        400
+      ],
+      "id": "b351899d-bb84-4258-b2c4-42b930e62f7a",
+      "name": "Find Employee"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Get all employees from the employees data table.\nUse this tool when the user asks for all employees, the complete employee list, or a list of employees.",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "LHvtOSXS2B2Dk4mr",
+          "mode": "list",
+          "cachedResultName": "employees",
+          "cachedResultUrl": "/projects/hC98jRbPlQ6EjMby/datatables/LHvtOSXS2B2Dk4mr"
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTableTool",
+      "typeVersion": 1.1,
+      "position": [
+        192,
+        384
+      ],
+      "id": "1b7d2ac6-d3ad-4831-87dd-d6ceb873ab5d",
+      "name": "List All Employees"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Employee": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List All Employees": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "92dff1dc-cbab-4685-b1a8-807765f64fdc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d3a9cb5a82e7dd247499ce0e5d7bddda6cde8326dd1f0f825fcedb52c6393fcf"
+  },
+  "nodeGroups": [],
+  "id": "75j7aGQETn0MymkP",
+  "tags": []
+}
