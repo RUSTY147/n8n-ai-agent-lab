@@ -48,6 +48,7 @@ This demonstrates **AI Agent tool chaining**.
 ---
 
 # 🏗️ Architecture
+![n8n AI Agent Architecture](docs/images/architecture-overview.png)
 
 ```text
                          ┌──────────────────────┐
